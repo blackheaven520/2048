@@ -191,6 +191,9 @@ function setupEventListeners() {
     
     // 撤销按钮
     undoBtn.addEventListener('click', undoMove);
+    
+    // 触摸控制
+    setupTouchControls();
 }
 
 // 处理键盘输入(异步支持动画)
@@ -521,9 +524,55 @@ function undoMove() {
     renderGrid();
 }
 
-// 触摸事件支持(待实现)
+// 触摸事件支持
 function setupTouchControls() {
-    // 将在后续添加触摸支持
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const minSwipeDistance = 50; // 最小滑动距离
+
+    document.addEventListener('touchstart', function(event) {
+        if (gameOver) return;
+        const touch = event.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+    }, {passive: false});
+
+    document.addEventListener('touchmove', function(event) {
+        if (gameOver || !touchStartX || !touchStartY) return;
+        
+        const touch = event.touches[0];
+        const touchEndX = touch.clientX;
+        const touchEndY = touch.clientY;
+        
+        const diffX = touchStartX - touchEndX;
+        const diffY = touchStartY - touchEndY;
+        
+        // 检查是否达到最小滑动距离
+        if (Math.abs(diffX) < minSwipeDistance && Math.abs(diffY) < minSwipeDistance) return;
+        
+        // 确定主要滑动方向
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            // 水平滑动
+            if (diffX > 0) {
+                handleKeyPress({key: 'ArrowLeft'});
+            } else {
+                handleKeyPress({key: 'ArrowRight'});
+            }
+        } else {
+            // 垂直滑动
+            if (diffY > 0) {
+                handleKeyPress({key: 'ArrowUp'});
+            } else {
+                handleKeyPress({key: 'ArrowDown'});
+            }
+        }
+        
+        // 重置起点，防止连续触发
+        touchStartX = 0;
+        touchStartY = 0;
+        
+        event.preventDefault();
+    }, {passive: false});
 }
 
 // 启动游戏
